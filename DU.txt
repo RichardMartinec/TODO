@@ -1,0 +1,4 @@
+D.Ú. : Pridať do tohto klódu to, že keď klikneme na funkciu, tak sa vymaže  +  Dizajnovať FrontEnd
+
+
+Nab Hodina Písomka: prejsť si formulár, auztentifikácia a toto
