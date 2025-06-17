@@ -10,14 +10,17 @@
     <a href ="{% url 'pridat_ulohu' %}">"Pridať úlohy"</a>
     <ul>
         {% for uloha in ulohy %}
-            <li>
-                <a href="{% url 'oznac_hotovu' uloha.id%}">
-                    {% if uloha.hotova %}<s>{{ uloha.nazov }}</s> {% else %} {{ uloha.nazov }} {% endif %}
-                </a>
-            </li>
+            {% if not uloha.hotova %}
+                <li>
+                    <a href="{% url 'oznac_hotovu' uloha.id %}">
+                        {{ uloha.nazov }}
+                    </a>
+                </li>
+            {% endif %}
         {% empty %}
             <li>Žiadne úlohy</li>
         {% endfor %}
     </ul>
+
 </body>
 </html>

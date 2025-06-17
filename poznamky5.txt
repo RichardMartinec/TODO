@@ -1,0 +1,156 @@
+Formulár:
+
+1. Vytvoríme projekt a aplikáciu
+
+2. Vytvoríme models:
+
+    from django.db import models
+
+    class Uloha(models.Model):
+        nazov = models.CharField(max_length=100)
+        hotova = models.BooleanField(default=False)
+        vytvorena = models.DateTimeField(auto_now_add=True)
+        termin = models.DateField(null=True, blank=True)
+
+        def __str__(self):
+            return self.nazov
+
+
+3. Zapíšeme ich do adminu:
+
+    from django.contrib import admin
+    from .models import Uloha
+
+    admin.site.register(Uloha)
+
+
+4. Vytvoríme si priečinok forms:
+
+    from django import forms 
+    from .models import Uloha
+
+    class UlohaForm(forms.ModelForm):
+        class Meta:
+            model = Uloha
+            fields = ['nazov', 'termin']
+            widgets = {
+                'termin': forms.DateInput(attrs={'type': 'date'})
+            }
+
+
+5. Následne do views pridáme:
+
+    from django.shortcuts import render, redirect
+    from .models import Uloha
+    from .forms import UlohaForm
+
+    def zoznam_uloh(request):
+        ulohy = Uloha.objects.all()
+        return render(request, 'ulohy/zoznam.html', {'ulohy':ulohy})
+
+    def oznac_hotovu(request, id):
+        uloha = Uloha.objects.get(id=id)
+        if uloha.hotova:                         // ak je hotová, vymaž
+            uloha.delete()
+        else:
+            uloha.hotova = not uloha.hotova
+            uloha.save()
+
+
+        (
+            uloha = Uloha.objects.get(id=id)
+            uloha.hotova = not uloha.hotova
+            uloha.save()
+        )
+
+
+        return redirect('zoznam_uloh')
+
+    def pridat_ulohu(request):
+        if request.method == 'POST':
+            form = UlohaForm(request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect('zoznam_uloh')    
+        else:
+            form = UlohaForm()
+        return render(request, 'ulohy/formular.html', {'form':form})
+
+
+6. Upravíme urls.py:
+
+    from django.urls import path
+    from . import views
+
+    urlpatterns = [
+        path('', views.zoznam_uloh, name='zoznam_uloh'),
+        path('hotovo/<int:id>/', views.oznac_hotovu, name='oznac_hotovu'),
+        path('nova/', views.pridat_ulohu, name='pridat_ulohu'),
+    ]
+
+
+7. Vytvoríme si HTML šablonu:
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>To-Do Zoznam</title>
+    </head>
+    <body>
+        <h1>To-Do Zoznam</h1>
+        <a href ="{% url 'pridat_ulohu' %}">"Pridať úlohy"</a>
+        <ul>
+            {% for uloha in ulohy %}
+                {% if not uloha.hotova %}
+                    <li>
+                        <a href="{% url 'oznac_hotovu' uloha.id %}">
+                            {{ uloha.nazov }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% empty %}
+                <li>Žiadne úlohy</li>
+            {% endfor %}
+        </ul>
+
+
+        // ak je hotova, prečiarkni
+
+            <ul>
+            {% for uloha in ulohy %}
+                <li>
+                    <a href="{% url 'oznac_hotovu' uloha.id%}">
+                        {% if uloha.hotova %}<s>{{ uloha.nazov }}</s> {% else %} {{ uloha.nazov }} {% endif %}
+                    </a>
+                </li>
+            {% empty %}
+                <li>Žiadne úlohy</li>
+            {% endfor %}
+            </ul>
+        
+        //
+
+    </body>
+    </html>
+
+
+8. Vytvoríme súbor formular.html pre formulár:
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <h1>Nová úloha</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Pridať</button>
+        </form>
+    </body>
+    </html>

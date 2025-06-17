@@ -8,8 +8,11 @@ def zoznam_uloh(request):
 
 def oznac_hotovu(request, id):
     uloha = Uloha.objects.get(id=id)
-    uloha.hotova = not uloha.hotova
-    uloha.save()
+    if uloha.hotova:
+        uloha.delete()
+    else:
+        uloha.hotova = not uloha.hotova
+        uloha.save()
     return redirect('zoznam_uloh')
 
 def pridat_ulohu(request):
